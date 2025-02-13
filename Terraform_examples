@@ -1,0 +1,31 @@
+provider "aws"{
+ alias = "us-east-2"
+ region = "us-east-2"
+}
+
+provider "aws"{
+  alias = "us-west-2"
+  region = "us-west-2"
+}
+resource "aws_instance" "one"{
+  ami = "ami-07f463d9d4a6f005f"
+  instance_type = "t2.micro"
+  count = 1
+  key_name = "ohio.pem"
+  provider = "aws.us-east-2"
+  tags={
+   Name = "abhishek verramalla"
+}
+}
+
+resource "aws_instance" "two"{
+ ami = "ami-000089c8d02060104"
+ instance_type = "t2.micro"
+ count = 2
+ provider = "aws.us-west-2"
+ tags={
+   Name = "abhishek verramalla"
+}
+}
+
+
