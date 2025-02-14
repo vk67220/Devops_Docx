@@ -104,4 +104,158 @@ terraform apply --auto-approve -var-file=prod.tfvars
 
 
 
+terraform-day4/
+├── dev.tfvars                  # Environment-specific variables
+├── main.tf                      # Root module
+├── variables.tf                 # Root module variable declarations ✅ (MISSING BEFORE)
+├── modules
+│   └── ec2_instance             # Child module (Reusable EC2 code)
+│       ├── main.tf              # EC2 resource definition
+│       ├── outputs.tf           # Output values (e.g., Public IP)
+│       └── variables.tf         # Variable definitions for the module
+├── prod.tfvars                  # Environment-specific variables
+├── staging.tfvars               # Environment-specific variables
+└── terraform.tfstate            # Terraform state file (generated after apply)
+
+
+
+✅ main.tf (Root Module)
+
+provider "aws" {
+  region = "us-east-2"
+}
+
+module "ec2_instance" {
+  source         = "./modules/ec2_instance"   # Refers to child module
+  ami_id         = var.ami_id
+  instance_type  = var.instance_type
+  instance_count = var.instance_count
+  key_name       = var.key_name
+  environment    = var.environment
+}
+
+output "ec2_public_ips" {
+  description = "Public IP addresses of EC2 instances"
+  value       = module.ec2_instance.public_ips
+}
+
+
+What’s happening here?
+We define the AWS provider.
+We call the ec2_instance module using source = "./modules/ec2_instance".
+We pass in the required variables (like ami_id, instance_type, etc.).
+We define an output to display the public IPs of the created EC2 instances.
+4️⃣ Variable Declaration in Root Module (variables.tf)
+Since Terraform requires variables to be declared before use, we define them in variables.tf.
+
+✅ variables.tf (Root Module)
+
+variable "ami_id" {
+  description = "AMI ID for EC2 instance"
+  type        = string
+}
+
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+}
+
+variable "instance_count" {
+  description = "Number of EC2 instances to create"
+  type        = number
+}
+
+variable "key_name" {
+  description = "EC2 key pair name"
+  type        = string
+  default     = "ohio.pem"
+}
+
+variable "environment" {
+  description = "Deployment environment (dev, staging, prod)"
+  type        = string
+}
+
+5️⃣ Environment-Specific Variables (.tfvars Files)
+
+Each environment (dev, prod, staging) has its own .tfvars file, specifying different values for the declared variables.
+
+✅ dev.tfvars (For Development Environment)
+
+ami_id         = "ami-000089c8d02060104"
+instance_type  = "t2.small"
+instance_count = 2
+environment    = "dev"
+key_name       = "ohio.pem"
+✅ prod.tfvars (For Production Environment)
+
+ami_id         = "ami-04681163a08179f28"
+instance_type  = "t2.medium"
+instance_count = 3
+environment    = "prod"
+key_name       = "ohio.pem"
+✅ staging.tfvars (For Staging Environment)
+
+ami_id         = "ami-07f463d9d4a6f005f"
+instance_type  = "t2.micro"
+instance_count = 1
+environment    = "staging"
+key_name       = "ohio.pem"
+
+6️⃣ Creating the EC2 Module (modules/ec2_instance/)
+
+✅ modules/ec2_instance/variables.tf (Child Module)
+
+The child module must declare the same variables that are passed from the root module.
+
+variable "ami_id" {
+  description = "AMI ID for EC2 instance"
+  type        = string
+}
+
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+}
+
+variable "instance_count" {
+  description = "Number of EC2 instances to create"
+  type        = number
+}
+
+variable "key_name" {
+  description = "EC2 key pair name"
+  type        = string
+}
+
+variable "environment" {
+  description = "Deployment environment (dev, staging, prod)"
+  type        = string
+}
+
+✅ modules/ec2_instance/main.tf (Child Module)
+
+This file defines how EC2 instances are created.
+
+resource "aws_instance" "example" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  count         = var.instance_count
+  key_name      = var.key_name
+
+  tags = {
+    Name        = "terraform_ec2_${var.environment}"
+    Environment = var.environment
+  }
+}
+
+✅ modules/ec2_instance/outputs.tf (Child Module)
+
+Outputs the public IPs of the created instances.
+
+
+output "public_ips" {
+  description = "Public IP addresses of the EC2 instances"
+  value       = aws_instance.example[*].public_ip
+}
 
