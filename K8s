@@ -1,0 +1,84 @@
+Kubernetes:-  Orchestration platform
+
+K8S is an orchestration platform means management.by using K8S we can manage
+     - Docker containers
+To automate the management of containers have to use Orchestration engines.
+     -Docker swarm (outdated)
+     -k8s(advanced version)
+k8s is used to manage the containers of our app.
+k8s will take care of containers deployment,scaling,de-scaling and containers load balancers
+
+scaling the containers in docker swarm is manual process 
+
+production related deployments we will use k8s and it is highly recommended
+
+
+Clusters
+
+k8s will run based on cluster
+cluster is nothing but group of servers
+one server is called as master node or control plane
+remaining servers are called as worker nodes
+
+Master node acts as a manager, worker nodes acts as team members
+
+
+
+
+
+
+
+K8s architecture:-
+
+in k8s most important component is master node/control plane
+
+in control plane we will have
+
+API server 
+scheduler
+controller manager
+etcd
+
+worker nodes
+
+kubelet --worker node agent
+kube-proxy
+
+
+A DevOps engineer submits a deployment request to the API server, which stores the request in etcd, the internal database of the Kubernetes cluster.
+
+The API server is responsible for handling incoming requests from users and storing them in etcd.
+
+The scheduler identifies pending requests in etcd and determines which worker node should execute the task. It makes this decision by communicating with kubelet.
+
+The controller manager receives information from the scheduler via kubelet and instructs the worker node to create the container.
+
+The controller manager is responsible for managing task execution on the worker node.
+
+Within the pod, the container is created and runs the application.
+
+The kube-proxy is a networking component in Kubernetes that maintains network rules on each node, enabling communication between services and pods within the cluster.
+
+
+
+Kubernetes components:-
+
+Pods:-
+
+In K8S every container will be created inside the pod
+Pod always runs inside the worker nodes
+We can create multiple pods in a single node
+Every pod will have unique IP address
+whenever a pod dies, a new IP address will be created
+
+
+How pods will communicate?
+
+Each pod gets its own IP address. So each pod can communicate with eachother using their internal IP address
+
+K8S Manifest File
+In Manifest yml file, there are 4 sections available;
+	1. apiVersion
+	2. kind
+	3. metadata
+	4. spec
