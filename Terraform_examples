@@ -311,9 +311,14 @@ variable "key_name" {
 }
 
 
+
+
+
 output "public_ip" {
     value = aws_instance.example[*].public_ip
   }
+
+
 
 
 provider "aws" {
@@ -331,3 +336,306 @@ resource "aws_instance" "example" {
 
 }
 
+
+
+
+
+
+Scenario:-
+
+
+
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = "MyVPC"
+  }
+}
+
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "MyInternetGateway"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = "10.0.0.0/25" # Adjust CIDR block as needed
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "PublicSubnet"
+  }
+}
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = "10.0.0.128/25" # Adjust CIDR block as needed
+
+  tags = {
+    Name = "PrivateSubnet"
+  }
+}
+
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.my_igw.id
+  }
+
+  tags = {
+    Name = "PublicRouteTable"
+  }
+}
+
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "PrivateRouteTable"
+  }
+}
+
+resource "aws_route_table_association" "private_assoc" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+resource "aws_security_group" "my_sg" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "MySecurityGroup"
+  }
+}
+
+resource "aws_instance" "public_instance" {
+  ami             = "ami-07f463d9d4a6f005f" # Replace with a valid AMI ID
+  instance_type   = "t2.micro"
+  subnet_id       = aws_subnet.public_subnet.id  # Only reference subnet_id once
+  key_name        = "ohio.pem"
+  vpc_security_group_ids = [aws_security_group.my_sg.id]  # Correct security group reference
+
+  tags = {
+    Name = "PublicEC2Instance"
+  }
+}
+
+
+terraform plan
+
+terraform apply --auto-approve
+
+
+
+scenario:-
+
+variables.tf
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
+
+variable "subnet_cidrs" {
+  description = "List of subnet CIDR blocks"
+  type        = list(string)
+}
+
+variable "ports" {
+  description = "List of ports for security group rules"
+  type        = list(string)
+  default     = ["22", "80"]
+}
+
+variable "subnet_tags" {
+  description = "List of tags for subnets"
+  type        = list(string)
+  default     = ["pubsub", "privsub"]
+}
+
+variable "subnet_names" {
+  description = "List of names for subnets"
+  type        = list(string)
+  default     = ["pubsub", "privsub"]
+}
+
+variable "from_whom" {
+  description = "The source IP or CIDR blocks to allow in security group"
+  type        = string
+}
+
+variable "instance_ami" {
+  description = "ami_id of an instance"
+  type = string
+  default = "ami-07f463d9d4a6f005f"
+}
+
+variable "instance_type" {
+  description = "instance type of any ec2"
+  type = string
+  default = "t2.micro"
+}
+
+
+main.tf
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
+
+variable "subnet_cidrs" {
+  description = "List of subnet CIDR blocks"
+  type        = list(string)
+}
+
+variable "ports" {
+  description = "List of ports for security group rules"
+  type        = list(string)
+  default     = ["22", "80"]
+}
+
+variable "subnet_tags" {
+  description = "List of tags for subnets"
+  type        = list(string)
+  default     = ["pubsub", "privsub"]
+}
+
+variable "subnet_names" {
+  description = "List of names for subnets"
+  type        = list(string)
+  default     = ["pubsub", "privsub"]
+}
+
+variable "from_whom" {
+  description = "The source IP or CIDR blocks to allow in security group"
+  type        = string
+}
+
+variable "instance_ami" {
+  description = "ami_id of an instance"
+  type = string
+  default = "ami-07f463d9d4a6f005f"
+}
+
+variable "instance_type" {
+  description = "instance type of any ec2"
+  type = string
+  default = "t2.micro"
+}
+
+[root@ip-172-31-0-231 terraform-day5]# cat main.tf 
+resource "aws_vpc" "my_vpc" {
+  cidr_block = var.vpc_cidr
+
+  tags = {
+    Name = "MyVPC"
+  }
+}
+
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "MyInternetGateway"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = var.subnet_cidrs[0]  # Use the first CIDR from the list for public subnet
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = var.subnet_names[0]  # Use the first name for public subnet
+    Tag = var.subnet_tags[0]    # Use the first tag for public subnet
+  }
+}
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = var.subnet_cidrs[1]  # Use the second CIDR from the list for private subnet
+
+  tags = {
+    Name = var.subnet_names[1]  # Use the second name for private subnet
+    Tag = var.subnet_tags[1]    # Use the second tag for private subnet
+  }
+}
+
+resource "aws_security_group" "my_sg" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  ingress {
+    from_port   = var.ports[0]  # Use first port (22) from the list
+    to_port     = var.ports[0]
+    protocol    = "tcp"
+    cidr_blocks = [var.from_whom]  # Allow access from the specified IP or CIDR
+  }
+
+  ingress {
+    from_port   = var.ports[1]  # Use second port (80) from the list
+    to_port     = var.ports[1]
+    protocol    = "tcp"
+    cidr_blocks = [var.from_whom]  # Allow access from the specified IP or CIDR
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "MySecurityGroup"
+  }
+}
+
+resource "aws_instance" "public_instance" {
+  ami             = var.instance_ami
+  instance_type   = var.instance_type
+  subnet_id       = aws_subnet.public_subnet.id
+  key_name        = "ohio.pem"
+  vpc_security_group_ids = [aws_security_group.my_sg.id]
+
+  tags = {
+    Name = "PublicEC2Instance"
+  }
+}
+
+
+terraform plan   -var 'vpc_cidr=10.0.0.0/24'   -var 'subnet_cidrs=["10.0.0.0/25", "10.0.0.128/25"]'   -var 'from_whom=0.0.0.0/0'
+
+terraform apply   -var 'vpc_cidr=10.0.0.0/24'   -var 'subnet_cidrs=["10.0.0.0/25", "10.0.0.128/25"]'   -var 'from_whom=0.0.0.0/0' --auto-approve
