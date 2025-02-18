@@ -55,3 +55,9 @@ spec:
       targetPort: 3000
       nodePort: 31877 #any number can be given but it has to be b/w 30000 and 32767
 ---
+
+Create the pod
+Check in which worker node the pod is created
+Open the port given in above service manifest file of worker node security group
+access the app: http://13.127.196.123:31877/
+
