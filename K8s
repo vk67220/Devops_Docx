@@ -32,6 +32,8 @@ K8s architecture:-
 
 in k8s most important component is master node/control plane
 
+using 'kubectl' we can communicate with the Control Plane
+
 in control plane we will have
 
 API server 
@@ -74,7 +76,7 @@ whenever a pod dies, a new IP address will be created
 
 How pods will communicate?
 
-Each pod gets its own IP address. So each pod can communicate with eachother using their internal IP address
+Each pod gets its own IP address. So each pod can communicate with each other using their internal IP address
 
 K8S Manifest File
 In Manifest yml file, there are 4 sections available;
@@ -82,3 +84,41 @@ In Manifest yml file, there are 4 sections available;
 	2. kind
 	3. metadata
 	4. spec
+
+
+Can we access the app running inside a pod?
+NO. We cannot access app outside the pod. Because pods cannot be accessed outside of the cluster. By default, in K8S pods are specific to cluster.
+
+To access the pods outside of the cluster, we need to expose the pods for outside access.
+We will use K8S "Service" concept to expose the pods outside of the cluster
+
+K8S Service concept is used to expose the pods outside of the cluster.
+We have 3 types of K8S Services to expose the pods outside of cluster;
+	1. Cluster IP
+	2. Node Port
+	3. Load Balancer
+
+ClusterIP:
+
+To access the pods within the cluster, we will use Cluster IP service
+in Cluster IP service all the pods are mapped to single IP address, which is called as Static IP
+expose the pods within the cluster, we can use Cluster IP service
+This will generate Static IP to access the pods within the cluster
+Cluster IP will not change when the pods are recreated
+
+2. NodePort
+Node Port is a service which is used to expose the pod outside of the cluster
+When we are using Node Port service, we will specify the type as "NodePort" in service manifest file
+if we dont specify the NodePort number, K8S will provide a random ip using which we have to access the app.
+If we want to run our app on our own port number then specify the port number under nodePort in the service manifest file
+
+any number can be given but it has to be b/w 30000 and 32767
+
+
+
+
+
+
+
+
+
