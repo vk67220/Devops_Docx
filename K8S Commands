@@ -2,3 +2,7 @@ To see the worker nodes ----> kubectl get nodes
 To see the pod details ------> kubectl get pods
 To see the cluster data ----> .kube file it is hidden file
 To create a pod: kubectl apply -f <pod-yml-filename>
+To see in which worker node pod got created: kubectl describe pod <PodName>
+To see the log data of the pod: kubectl logs <PodName>
+To see the details of a pod: kubectl get pods -o wide
+To create a service manifest file: kubectl apply -f <ServiceManifestFileName>
