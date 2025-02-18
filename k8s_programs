@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Pod #Kind is written as Pod, because we are creating a POD here
+metadata:
+  name: javawebapppod #its a pod name
+  labels: #to identify pods in the cluster, we will give labels. Label is an ID for the Pod
+    app: javawebapp #pod label
+spec: #here we will specify what we want to do with pod
+  containers: #here we are creating a container
+    - name: javawebappcontainer #container name
+      image: kastrov/javaappkastro
+      ports: #port mapping
+        - containerPort: 8080 #any number can be given
+---
