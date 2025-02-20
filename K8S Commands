@@ -6,3 +6,8 @@ To see in which worker node pod got created: kubectl describe pod <PodName>
 To see the log data of the pod: kubectl logs <PodName>
 To see the details of a pod: kubectl get pods -o wide
 To create a service manifest file: kubectl apply -f <ServiceManifestFileName>
+To see the namespaces available: kubectl get namespace (or) kubectl get ns
+To see the pods running under a particular namespace: kubectl get pods -n <NameSpaceName>
+To see everything running on a particular namespace: kubectl get all -n <NameSpaceName>
+How to create custom namespace in K8S Cluster?
+To create a namespace: kubectl create ns <NameSpaceName>
