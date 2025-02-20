@@ -114,6 +114,18 @@ If we want to run our app on our own port number then specify the port number un
 
 any number can be given but it has to be b/w 30000 and 32767
 
+3. Load Balancer
+
+Load Balancer will distribute the traffic equally to all the Worker Nodes available in the cluster
+
+Namespace:
+
+Namespace is used to group the K8S components logically
+We can create multiple namespaces in K8S cluster
+Namespaces are isolated
+Whenever we create the pods under a namespace, when we delete that namespace, all the pods inside that namespace will also gets DELETED
+
+
 
 
 
