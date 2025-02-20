@@ -126,8 +126,21 @@ Namespaces are isolated
 Whenever we create the pods under a namespace, when we delete that namespace, all the pods inside that namespace will also gets DELETED
 
 
+Always we need to create the pods using below K8S components;
+1. Replication Controller
+2. Replica Set
+3. Deployment
+4. Stateful Set
+5. Daemon Set
+
+If you create the pods using above K8S components, K8S will provide self healing capability. If you pod is crashed, K8S will recreate it.
 
 
+1. Replication Controller (RC)
+It is a K8S component to create pods
+if i ask to create 5 pods for my app, if any one pod gets crashed, replication controller will create a new pod to match the given number of pods i.e 5
+RC will take care of pod lifecycle
+using RC, we can scale up and scale down the pods.
 
 
 
