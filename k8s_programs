@@ -61,3 +61,40 @@ Check in which worker node the pod is created
 Open the port given in above service manifest file of worker node security group
 access the app: http://13.127.196.123:31877/
 
+
+Namespace with service loadbalancer
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+   name: kastrons
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: javawebapppod
+  labels:
+    name: javawebapp
+  namespace: kastrons 
+spec:
+  containers:
+  - name: javawebappcontainer
+    image: kastrov/swiggy
+    ports:
+     - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: javawebappsvc
+  namespace: kastrons
+spec:
+  type: LoadBalancer
+  selector:
+    app: javawebapp
+  ports:
+  - port: 80
+    targetPort: 3000
+    nodePort: 31700
+
+
