@@ -11,3 +11,4 @@ To see the pods running under a particular namespace: kubectl get pods -n <NameS
 To see everything running on a particular namespace: kubectl get all -n <NameSpaceName>
 How to create custom namespace in K8S Cluster?
 To create a namespace: kubectl create ns <NameSpaceName>
+To delete a namespace: kubectl delete ns <NameSpaceName>
