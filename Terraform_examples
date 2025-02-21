@@ -639,3 +639,314 @@ resource "aws_instance" "public_instance" {
 terraform plan   -var 'vpc_cidr=10.0.0.0/24'   -var 'subnet_cidrs=["10.0.0.0/25", "10.0.0.128/25"]'   -var 'from_whom=0.0.0.0/0'
 
 terraform apply   -var 'vpc_cidr=10.0.0.0/24'   -var 'subnet_cidrs=["10.0.0.0/25", "10.0.0.128/25"]'   -var 'from_whom=0.0.0.0/0' --auto-approve
+
+
+Before executing the below terraform file create a public and private key within the terraform instance
+
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ""
+
+it will create both public and private keys 
+
+
+
+
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = "MyVPC"
+  }
+}
+
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "MyInternetGateway"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = "10.0.0.0/25" # Adjust CIDR block as needed
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "PublicSubnet"
+  }
+}
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = "10.0.0.128/25" # Adjust CIDR block as needed
+
+  tags = {
+    Name = "PrivateSubnet"
+  }
+}
+
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.my_igw.id
+  }
+
+  tags = {
+    Name = "PublicRouteTable"
+  }
+}
+
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "PrivateRouteTable"
+  }
+}
+
+resource "aws_route_table_association" "private_assoc" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+resource "aws_security_group" "my_sg" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "MySecurityGroup"
+  }
+}
+
+resource "aws_key_pair" "example" {
+  key_name   = "terraform-demo-abhi"  # Replace with your desired key name
+  public_key = file("/root/.ssh/id_rsa.pub")  # Replace with the path to your public key file
+}
+
+resource "aws_instance" "public_instance" {
+  ami             = "ami-07f463d9d4a6f005f" # Replace with a valid AMI ID
+  instance_type   = "t2.micro"
+  subnet_id       = aws_subnet.public_subnet.id  # Only reference subnet_id once
+  key_name        = aws_key_pair.example.key_name
+  vpc_security_group_ids = [aws_security_group.my_sg.id]  # Correct security group reference
+
+  tags = {
+    Name = "PublicEC2Instance"
+  }
+    connection {
+      type = "ssh"
+      user = "ec2-user"
+      private_key = file("/root/.ssh/id_rsa")
+      host = self.public_ip
+    }
+
+    provisioner "remote-exec" {
+      inline = [ 
+        "sudo yum update -y",
+        "sudo yum install -y httpd",
+        "sudo systemctl start httpd",
+        "sudo systemctl enable httpd"
+       ]
+      
+    }
+}
+
+
+
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = "MyVPC"
+  }
+}
+
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "MyInternetGateway"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = "10.0.0.0/25" # Adjust CIDR block as needed
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "PublicSubnet"
+  }
+}
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = "10.0.0.128/25" # Adjust CIDR block as needed
+
+  tags = {
+    Name = "PrivateSubnet"
+  }
+}
+
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.my_igw.id
+  }
+
+  tags = {
+    Name = "PublicRouteTable"
+  }
+}
+
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "PrivateRouteTable"
+  }
+}
+
+resource "aws_route_table_association" "private_assoc" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+resource "aws_security_group" "my_sg" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "MySecurityGroup"
+  }
+}
+
+resource "aws_key_pair" "example" {
+  key_name   = "terraform-demo-abhi"  # Replace with your desired key name
+  public_key = file("/root/.ssh/id_rsa.pub")  # Replace with the path to your public key file
+}
+
+resource "aws_instance" "public_instance" {
+  ami             = "ami-07f463d9d4a6f005f" # Replace with a valid AMI ID
+  instance_type   = "t2.micro"
+  subnet_id       = aws_subnet.public_subnet.id  # Only reference subnet_id once
+  key_name        = aws_key_pair.example.key_name
+  vpc_security_group_ids = [aws_security_group.my_sg.id]  # Correct security group reference
+
+  tags = {
+    Name = "PublicEC2Instance"
+  }
+    connection {
+      type = "ssh"
+      user = "ec2-user"
+      private_key = file("/root/.ssh/id_rsa")
+      host = self.public_ip
+    }
+
+    # Copy the app.py file to Amazon Linux EC2 instance
+  provisioner "file" {
+    source      = "app.py"
+    destination = "/home/ec2-user/app.py"
+  }
+
+  # Install Python, Flask, and run the application
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Hello from the remote instance'",
+      "sudo yum update -y",                # Use yum instead of apt-get
+      "sudo yum install -y python3-pip",   # Install Python3 and pip
+      "cd /home/ec2-user",
+      "sudo pip3 install flask",           # Install Flask
+      "sudo nohup python3 app.py &"        # Run the app in the background
+    ]
+  }
+
+  # 📌 Local-exec provisioner: Display SSH command and Flask app URL
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "Terraform has successfully created your EC2 instance!"
+      echo "SSH into the instance: ssh -i ~/.ssh/id_rsa ec2-user@${self.public_ip}"
+      echo "Flask app should be running at: http://${self.public_ip}:80"
+      echo "Verify with: curl http://${self.public_ip}"
+    EOT
+  }
+
+}
+
+
+
+🔹 Terraform State & Locking
+What happens if two users run terraform apply at the same time?
+How do you enable state locking in Terraform?
+How do you recover if the Terraform state file gets corrupted or deleted?
+How do you handle Terraform state drift?
+What is terraform refresh and when should you use it?
+What is depends_on and when should you use it?
+What is Terraform’s resource lifecycle? (create, destroy, replace)
+How do you prevent a Terraform resource from being destroyed? (prevent_destroy lifecycle)
+How do you import an existing resource into Terraform state? (terraform import)
+What happens when you change a resource that depends on another resource?
+What does terraform destroy do? How do you prevent accidental deletions?
+How do you enable debug logs in Terraform? (TF_LOG=DEBUG terraform apply)
+How do you manage multiple environments (dev, staging, production) in Terraform?
+How do you roll back a failed Terraform deployment?
+How do you use count and for_each in Terraform?
+How do you handle state file versioning and backups?
+What are the best practices for managing Terraform state in a team enviroment?
+How do you handle state file corruption or conflicts?
+How can you migrate Terraform state files from one backend to another?
+What are the risks associated with manually editing Terraform state files?
