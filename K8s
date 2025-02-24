@@ -142,6 +142,54 @@ if i ask to create 5 pods for my app, if any one pod gets crashed, replication c
 RC will take care of pod lifecycle
 using RC, we can scale up and scale down the pods.
 
+Note: if you delete the Replication Controller, the replicas (pods) will also get deleted.
+
+2. Replica Set (RS)
+
+The only difference b/w RC and RS is in 'selector'
+Selector is used to identify the pod using 'pod label'
+RC supports equality based selector
+RS supports set based selector
+
+RC:
+selector:
+	app: javawebapp
+
+RS:
+selector:
+	matchLabels:
+		app: javawebapp
+		version: v1
+		type: backend
+
+Equality based selector means if pod label matches with 'selector' then only the pod will be identified
+In RC, we can configure only one pod label. But in RS, our pods can be made identified by using multiple pod labels. This is called as Set based selector.
+
+3. Deployment
+It is also one of the K8S component
+It is the most recommended approach to deploy the app in the K8S cluster
+In RS & RC scale up and scale down is a manual process
+Using 'deployment', scale up and scale down is possible in an automated way i.e Auto Scaling
+Deployment also supports Roll Out and Roll Back
+	
+
+In Replication controller to deploy the latest code we have to delete RC & RS, then pods will also be deleted and app will go down.
+In deployment, we can deploy the latest code with zero downtime for the application i.e HA
+
+In Realtime we prefer to work with 'deployment' concept;
+	1. app will have zero downtime
+	2. we can easily roll out and roll back
+	3. autoscaling can be achieved based on traffic to the app
+
+Deployment strategies;
+
+In K8S to deploy our app in K8S cluster we have 2 strategies
+	1. ReCreate - it will delete all the existing pods at a time and will create new pods. Here downtime for the app is possible
+	2. Rolling Update - it will delete the pods one by one and will create new pods simultaneously - mostly preferred in the realtime
+
+In deployment manifest file, if we dont specify deployment strategy, by default K8S will consider as 'Rolling Update'
+
+
 
 
 
