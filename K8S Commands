@@ -12,3 +12,9 @@ To see everything running on a particular namespace: kubectl get all -n <NameSpa
 How to create custom namespace in K8S Cluster?
 To create a namespace: kubectl create ns <NameSpaceName>
 To delete a namespace: kubectl delete ns <NameSpaceName>
+To verify the rc got created or not: kubectl get rc
+To scale the pods: kubectl scale rc <Replication Controller Name> --replicas <Count>
+To verify the replica set: kubectl get rs
+To delete the replica set: kubectl delete rs <RSName>
+To scale the pods: kubectl scale rs <RSName> --replicas <Count>
+To verify the deployment: kubectl get deployment
