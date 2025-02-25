@@ -190,8 +190,28 @@ In K8S to deploy our app in K8S cluster we have 2 strategies
 In deployment manifest file, if we dont specify deployment strategy, by default K8S will consider as 'Rolling Update'
 
 
+Config Map & Secrets
+=====================
+Config Map & Secret concepts are used to avoid the hard coded properties in the application.
 
+Config Map is used to store the data in the key-value format (non-confidential data).
 
+For non-confidential data (usernames) we will use ConfigMap.
+For confidential data (passwords) we will use Secret.
+
+Secret is used to store confidential data in key-value format. Here we will store the data in encrypted format
+Kubernetes stores secrets Base64-encoded.
+
+ConfigMap and Secret will make docker images as portable
+
+How to read the data from ConfigMap?
+We have to write a yml to read the data from configmap yml
+	- to create the MySQL container i need the data from config map and secret.
+
+K8S Volumes
+
+in docker, we have used docker volumes concept. The purpose of volumes is to store the data. To make our containers stateful we will use storage. 
+Similarly in K8S our pods are stateless. whatever the data that is generated in the app, i want to store the data permanently. For that in K8S we have a concept called PV - Persistent Volumes
 
 
 
