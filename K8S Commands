@@ -18,3 +18,4 @@ To verify the replica set: kubectl get rs
 To delete the replica set: kubectl delete rs <RSName>
 To scale the pods: kubectl scale rs <RSName> --replicas <Count>
 To verify the deployment: kubectl get deployment
+kubectl get configmap
