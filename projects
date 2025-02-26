@@ -127,6 +127,7 @@ It binds to an existing PersistentVolume (weshopify-db-pv).
 A Pod can now use this PVC to store database files (e.g., MySQL).
 
 
+
 =============================================================================================================================================================================
 weshopify-db-deployment.yml
 
@@ -186,7 +187,7 @@ spec:
     protocol: TCP
  selector: 
   app: weshopify-app-db-pod
-
+=============================================================================================================================================================================
 app-deployment.yml
 
 apiVersion: apps/v1
