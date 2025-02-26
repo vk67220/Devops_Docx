@@ -48,7 +48,7 @@ data:
  DB_USER_NAME_VALUE: cm9vdA==
  DB_PASSWORD_VALUE: cm9vdA==
 type: Opaque
-
+=============================================================================================================================================================================
 weshopify-db-pv.yml
 
 apiVersion: v1
@@ -67,6 +67,36 @@ spec:
   hostPath: 
     path: /opt/mysql
 
+
+persistent volumes:-which provides storage resources to Kubernetes applications.
+name: weshopify-db-pv → allowing Pods or PersistentVolumeClaims to reference it.
+
+Access Mode	      Multiple Pods?	       Multiple Nodes?	 Read?	Write?	  Common Storage Backends                             Best For
+ReadWriteOnce (RWO)	✅ (on same node)   	❌ (only 1 node)	✅	  ✅	      AWS EBS, Azure Disk, Google PD, Local SSD           Databases, Stateful Apps
+ReadOnlyMany (ROX)	✅	                  ✅	              ✅  	❌	      NFS, CephFS, GlusterFS                              Shared Read-Only Data
+ReadWriteMany (RWX)	✅	                  ✅	              ✅	  ✅	      NFS, CephFS, GlusterFS                              Web Apps, Shared Storage
+
+persistentVolumeReclaimPolicy: Retain
+
+Retain → The data is preserved(data is not deleted ) even if the PersistentVolumeClaim (PVC) is deleted.
+Delete → The PV and its data are automatically deleted when the PVC is deleted.
+Recycle → The volume is cleared and made available again.
+
+
+storageClassName: local-storage → Specifies a StorageClass that manages the volume.
+The StorageClass can be used by a PersistentVolumeClaim (PVC) to request storage dynamically.
+
+hostPath: 
+  path: /opt/mysql------------This binds the PersistentVolume to the local directory /opt/mysql on the host machine.
+
+Using hostPath (/opt/mysql) is NOT recommended for production because it is tied to a single node. If the node crashes, the data is lost, and other nodes cannot access it.
+
+nfs:
+    path: /shared-data
+    server: 192.168.1.100  # NFS Server IP
+For multi-node Kubernetes environments, use distributed storage solutions that support ReadWriteMany (RWX), allowing multiple nodes to read/write data.
+
+============================================================================================================================================================================
 weshopify-db-pvc.yml
 
 apiVersion: v1
@@ -82,6 +112,22 @@ spec:
     requests:
       storage: 4Gi
 
+
+kind: PersistentVolumeClaim → Defines a PersistentVolumeClaim (PVC), which requests storage from a PersistentVolume (PV).
+
+name: weshopify-db-pvc
+This PVC can be referenced in a Pod to mount storage.
+
+volumeName: weshopify-db-pv
+directly binds to an existing PersistentVolume (weshopify-db-pv).
+
+PVC Works
+The PVC requests storage (4Gi) with ReadWriteOnce access mode.
+It binds to an existing PersistentVolume (weshopify-db-pv).
+A Pod can now use this PVC to store database files (e.g., MySQL).
+
+
+=============================================================================================================================================================================
 weshopify-db-deployment.yml
 
 apiVersion: apps/v1
