@@ -1,0 +1,213 @@
+weshopify-db-configmap.yml
+
+apiVersion: v1
+kind: ConfigMap
+metadata: 
+  name: weshopify-db-config-map
+  labels: 
+    storage: weshopify-db-storage
+data: 
+ DB_DRIVER_NAME_VALUE: com.mysql.cj.jdbc.Driver
+ DB_HOST_SERVICE_NAME_VALUE: weshopify-app-db-service
+ DB_SCHEMA_VALUE: weshopify-app
+ DB_PORT_VALUE: "3306"
+
+
+Explaination
+
+DB_DRIVER_NAME_VALUE: com.mysql.cj.jdbc.Driver
+
+Your application’s database configuration files (e.g., application.properties or application.yml in Spring Boot) in that file we will have drivers configuration details
+
+DB_HOST_SERVICE_NAME_VALUE: weshopify-app-db-service   -------- weshopify-db-deployment.yml in this file we will create service
+
+Kubernetes service name that allows applications to communicate with the database.
+
+DB_SCHEMA_VALUE: weshopify-app
+
+This is the database name (schema name) configured in MySQL.
+Logging into MySQL and running:
+SHOW DATABASES;
+Checking your database initialization scripts (if any).
+Checking your application configuration files (.env, config.yaml, application.properties, etc.):
+Ex:-spring.datasource.url=jdbc:mysql://weshopify-app-db-service:3306/weshopify-app
+
+DB_PORT_VALUE: "3306"
+3306 is the default MySQL port.
+
+==================================================================================================================================================================
+ weshopify-db-secret.yml
+
+ apiVersion: v1
+kind: Secret
+metadata: 
+ name: weshopify-db-config-secrete
+ labels: 
+  secrete: weshopify-db-config-secrete
+data:
+ DB_USER_NAME_VALUE: cm9vdA==
+ DB_PASSWORD_VALUE: cm9vdA==
+type: Opaque
+
+weshopify-db-pv.yml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+ name: weshopify-db-pv
+ labels: 
+  name: weshopify-db-pv
+spec:
+  capacity: 
+   storage: 4Gi
+  accessModes: 
+   - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath: 
+    path: /opt/mysql
+
+weshopify-db-pvc.yml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weshopify-db-pvc
+spec:
+  volumeName: weshopify-db-pv      
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 4Gi
+
+weshopify-db-deployment.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+ name: weshopify-app-db-deployment
+ labels: 
+  app: weshopify-app-db
+spec:
+ template: 
+   metadata: 
+     labels: 
+       app: weshopify-app-db-pod
+   spec: 
+    volumes: 
+     - name: weshpify-app-db-volume
+       persistentVolumeClaim: 
+        claimName: weshopify-db-pvc
+    containers: 
+     - name: weshopify-app-db
+       image: mysql
+       ports: 
+        - containerPort: 3306
+       volumeMounts:
+         - name: weshpify-app-db-volume
+           mountPath: /opt/mysql
+       env: 
+        - name: MYSQL_ROOT_PASSWORD
+          #value: root
+          valueFrom: 
+           secretKeyRef: 
+            name: weshopify-db-config-secrete
+            key: DB_PASSWORD_VALUE
+        - name: MYSQL_DATABASE
+          #value: weshopify-app
+          valueFrom: 
+           configMapKeyRef: 
+            name: weshopify-db-config-map
+            key: DB_SCHEMA_VALUE
+ selector: 
+    matchLabels: 
+     app: weshopify-app-db-pod
+ replicas: 1
+---
+apiVersion: v1
+kind: Service
+metadata: 
+ name: weshopify-app-db-service
+ labels: 
+  app: weshopify-app-db-service
+spec:
+ type: ClusterIP
+ ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+ selector: 
+  app: weshopify-app-db-pod
+
+app-deployment.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-mysql
+spec:
+  selector:
+    matchLabels:
+      app: spring-boot-mysql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: spring-boot-mysql
+    spec:
+      containers:
+        - name: spring-boot-mysql
+          image: ashokit/spring-boot-mysql
+          ports:
+            - containerPort: 8080
+          env:   # Setting Enviornmental Variables
+            - name: DB_DRIVER_CLASS   # Setting Database host address from configMap
+              valueFrom :
+                configMapKeyRef :
+                  name : weshopify-db-config-map
+                  key :  DB_DRIVER_NAME_VALUE
+
+            - name: DB_HOST   # Setting Database host address from configMap
+              valueFrom :
+                configMapKeyRef :
+                  name : weshopify-db-config-map
+                  key :  DB_HOST_SERVICE_NAME_VALUE
+
+            - name: DB_NAME  # Setting Database name from configMap
+              valueFrom :
+                configMapKeyRef :
+                  name : weshopify-db-config-map
+                  key :  DB_SCHEMA_VALUE
+
+            - name: DB_USERNAME  # Setting Database username from Secret
+              valueFrom :
+                secretKeyRef :
+                  name : weshopify-db-config-secrete
+                  key :  DB_USER_NAME_VALUE
+
+            - name: DB_PASSWORD # Setting Database password from Secret
+              valueFrom :
+                secretKeyRef :
+                  name : weshopify-db-config-secrete
+                  key :  DB_PASSWORD_VALUE
+---
+apiVersion: v1 # Kubernetes API version
+kind: Service # Kubernetes resource kind we are creating
+metadata: # Metadata of the resource kind we are creating
+  name: springboot-mysql-svc
+spec:
+  selector:
+    app: spring-boot-mysql
+  ports:
+    - protocol: "TCP"
+      port: 8080 # The port that the service is running on in the cluster
+      targetPort: 8080 # The port exposed by the service
+      nodePort: 30785
+  type: NodePort # type of the service.
+
+
+  
+
+  
