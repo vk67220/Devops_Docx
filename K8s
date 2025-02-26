@@ -216,4 +216,8 @@ in docker, we have used docker volumes concept. The purpose of volumes is to sto
 Similarly in K8S our pods are stateless. whatever the data that is generated in the app, i want to store the data permanently. For that in K8S we have a concept called PV - Persistent Volumes
 
 
+persistentVolumeReclaimPolicy 3 types
 
+Retain
+Delete
+Recycle 
