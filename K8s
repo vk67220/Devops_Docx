@@ -195,12 +195,14 @@ Config Map & Secrets
 Config Map & Secret concepts are used to avoid the hard coded properties in the application.
 
 Config Map is used to store the data in the key-value format (non-confidential data).
+Ex:-Environment variables, Config files	
 
 For non-confidential data (usernames) we will use ConfigMap.
 For confidential data (passwords) we will use Secret.
 
 Secret is used to store confidential data in key-value format. Here we will store the data in encrypted format
 Kubernetes stores secrets Base64-encoded.
+Ex:-Database credentials, API keys
 
 ConfigMap and Secret will make docker images as portable
 
