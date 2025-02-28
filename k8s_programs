@@ -214,3 +214,5 @@ spec:
     targetPort: 3000
     nodePort: 31000
 ---
+
+above script do statefulset 
