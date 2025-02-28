@@ -221,3 +221,46 @@ persistentVolumeReclaimPolicy 3 types
 Retain
 Delete
 Recycle 
+
+
+--------------------------------------------------------
+Stateful Containers & Stateless Containers
+--------------------------------------------------------
+stateful container maintains the data permanently
+stateless container wont maintains the data permanently
+
+In stateless containers based apps for every request they will get new data and it will process that data
+	Ex: nodeJS, Nignx, SpringBoot...
+	Every request that is coming to the app will be treated as a new request
+In stateful containers based apps they will keep track of data
+	Ex:MySQL, Oracle, Postgress
+
+In K8S we have 2 important concepts;
+	1. deployment - used for stateless apps
+	2. statefulset - used for stateful apps
+If you want to deploy the DB in the EKS cluster, 'statefulset' is recommended
+If you are deploying the frontend of app, we will use stateless app i.e 'deployment'
+
+Deployment Vs StatefulSet
+--------------------------------------
+Deployment will create the pods with Random IDs/Names
+Deployment will scale down the pods in random order
+Deployment pods are stateless pods
+
+StatefulSet will create the pods with sticky identity
+StatefulSet will scale down the pods in reverse order
+StatefulSet pods are stateful pods
+
+2 Pods DB - Total 5 pods for DB --- replica = 7
+
+A statefulset is the K8S controller that is used to run the stateful app as containers (pods) in the cluster
+
+Daemon Set is a K8S resource to create pods
+Daemon Set will create one pod in each worker node based on replica count
+In real-time Daemon Set is used for logs monitoring
+Daemon Set is used to setup ELK (E - Elastic Search, L - Logstash, K - Kibana)
+
+when to use daemon Set?
+	1. Logs collector
+	2. Node monitoring
+
