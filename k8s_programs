@@ -220,6 +220,12 @@ above script do statefulset
 
 Helm charts:-
 
+create a testdemo folder insdie create a folder called template
+testdemo
+   |------chart.yml
+   |------values.yml 
+   |------template
+            |--------- nginxpod.yml ----manifest file
 nginxpod.yml create in template folder
 
 
@@ -290,3 +296,11 @@ values-prod.yml
 nginx:
  tag: v1
  nginxport: 8080
+
+chart.yml
+
+apiVersion: v2
+name: nginx-deploy
+description: "Deploying nginx chart to K8S cluster"
+version: 0.0.1
+appVersion: latest
