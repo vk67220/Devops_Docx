@@ -19,3 +19,19 @@ To delete the replica set: kubectl delete rs <RSName>
 To scale the pods: kubectl scale rs <RSName> --replicas <Count>
 To verify the deployment: kubectl get deployment
 kubectl get configmap
+
+helm lint  testdemo <helmchartname>
+helm install test<releasename> testdemo<hlelmcartname>
+helm list
+helm upgrade test testdemo   --used when update or upgrade release
+helm delete test ---release delete
+helm install test testdemo/ --dry-run
+
+helm install test -f values-prod.yaml testdemo/ --dry-run
+
+helm show values testdemo
+helm history test
+helm upgrade testdemo/
+helm history test
+
+
