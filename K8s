@@ -264,3 +264,14 @@ when to use daemon Set?
 	1. Logs collector
 	2. Node monitoring
 
+
+Helm charts:-
+
+chart.yml -->contains info about the chart,dependencies and version
+license---> contains license info
+chart-->detailed info about chart
+values.yml --> values which need to be passed to manifest files
+charts -->dependencies
+templates --> our manifest file which were templated
+
+
