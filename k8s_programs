@@ -216,3 +216,77 @@ spec:
 ---
 
 above script do statefulset 
+
+
+Helm charts:-
+
+nginxpod.yml create in template folder
+
+
+apiVersion: v1
+kind: pod
+metadata:
+   name: webapp
+   labels:
+      a: b
+spec:
+   containers: 
+     - name: test
+       image: nginx:latest
+     - conatinerPort: 80
+
+
+apiVersion: v1
+kind: pod
+metadata:
+   name: webapp
+   labels:
+      a: b
+spec:
+   containers: 
+     - name: test
+       image: {{ .Values.nginx.tag }}
+     - conatinerPort: {{ .Values.nginx.nginxport }}
+
+apiVersion: v1
+kind: pod
+metadata:
+   name: webapp
+   labels:
+      a: b
+spec:
+   containers: 
+     - name: test
+       {{- with.Values.nginx }}
+       image: nginx: {{ .tag }}
+     - conatinerPort: {{ .nginxport }}
+     {{- end}}
+
+
+if we comment tag in values-prod.yml file
+
+apiVersion: v1
+kind: pod
+metadata:
+   name: webapp
+   labels:
+      a: b
+spec:
+   containers: 
+     - name: test
+       {{- with.Values.nginx }}
+       image: nginx: {{ .tag | default "test" }}  if i comment tag details on values-prod.yml it will take test as tag name
+     - conatinerPort: {{ .nginxport }}
+     {{- end}}
+
+values.yml
+
+nginx:
+ tag: latest
+ nginxport: 80
+
+values-prod.yml
+
+nginx:
+ tag: v1
+ nginxport: 8080
