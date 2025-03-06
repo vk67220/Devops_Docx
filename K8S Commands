@@ -35,3 +35,13 @@ helm upgrade testdemo/
 helm history test
 
 
+nodename,nodeselector,taints,tolerations
+
+kubectl get node workernode-ip --show-labels
+kubectl label node workernode-ip type=web ----label 
+kubectl label node workernode-ip type-  ---- unlabelling
+kubectl taint node workernode-ip type=web:NoSchedule
+kubectl taint node workernode-ip type=web:prefernoschedule
+kubectl taint node workernode-ip type=web:noexecute
+
+
