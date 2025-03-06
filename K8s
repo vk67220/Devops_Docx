@@ -303,4 +303,10 @@ Distributes Pods across multiple nodes.
 NodeAffinity:-It helps in placing Pods on specific nodes
 
 First, label the nodes
-Now, apply Node Affinity in the Pod specification:
+Now, apply Node Affinity in the Pod specification
+
+pod restart policies:-
+
+restartPolicy: always (default)
+restartPolicy: OnFailure
+restartPolicy: Never
