@@ -281,3 +281,21 @@ nodeselector:-nodeSelector is used to tell a Pod to run on a node that has speci
 Taints:-taints are used to prevent Pods from running on specific nodes
      types----noschedule,prefernoschedule,noexecute
 Tolerations:-tolerations allow Pods to run on nodes that have taints.
+
+
+PodAffinity:-
+Pod Affinity means keeping certain Pods together on the same node or close to each others 
+
+Types of Pod Affinity
+1️⃣ requiredDuringSchedulingIgnoredDuringExecution
+2️⃣ preferredDuringSchedulingIgnoredDuringExecution
+
+Advantages
+Better performance by keeping related Pods close.
+Faster communication between services (low latency).
+e.g., frontend & backend on the same node.
+
+Pod Anti-Affinity:-
+Pod Anti-Affinity ensures that certain Pods do not run together on the same node.
+Advantages
+Distributes Pods across multiple nodes.
