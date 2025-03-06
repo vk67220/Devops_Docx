@@ -299,3 +299,8 @@ Pod Anti-Affinity:-
 Pod Anti-Affinity ensures that certain Pods do not run together on the same node.
 Advantages
 Distributes Pods across multiple nodes.
+
+NodeAffinity:-It helps in placing Pods on specific nodes
+
+First, label the nodes
+Now, apply Node Affinity in the Pod specification:
