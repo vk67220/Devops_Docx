@@ -306,3 +306,15 @@ version: 0.0.1
 appVersion: latest
 
 
+How to setup HPA in K8S Cluster?
+1. Install metric server/API
+2. Deploy a sample app
+3. Create Service
+4. Deploy HPA
+5. Increase load - load generator
+6. Monitor HPA events
+
+To increase the load on server manually
+kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://hpa-demo-deployment; done"
+
+
