@@ -329,4 +329,18 @@ HPA will interact with 'metric server' to identify CPU/Memory utilization of POD
 Metric Server is an app that collects metrics from objects such as PODS, Nodes a/c to the state of CPU/Memory
 Metric Server can be installed in the system as an add-on
 
+Liveness Probe:
+
+Checks if the pod is still alive.
+If it fails, Kubernetes kills and restarts the pod.
+
+This probe checks the /healthz
+
+Readiness Probe:
+
+Checks if the pod is ready to handle traffic.
+If it fails, Kubernetes removes the pod from the load balancer (but doesn’t restart it).
+
+This probe checks the /ready
+
 
