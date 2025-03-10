@@ -318,3 +318,90 @@ To increase the load on server manually
 kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://hpa-demo-deployment; done"
 
 
+
+------------------------------------
+K8S Web Dashboard
+------------------------------------
+1. Kubectl (CLI)
+2. Web Dashboard (UI based)
+
+======================
+K8S Web Dashboard Setup
+======================
+Connect to Master Node
+kubectl delete all --all
+
+#Lets download and apply the yml file to set web dashboard
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
+
+# The above yml file will create a namespace called "kubernetes-dashboard," where the pods get created.
+# Lets see the pods that are running in the namespace
+$ kubectl -n kubernetes-dashboard get pods -o wide
+#You can see 2 pods got created.
+
+# Lets see the service that is created in the namespace
+$ kubectl -n kubernetes-dashboard get svc
+
+# Edit k8s dashboard service and change it to NodePort from Cluster IP
+$ kubectl -n kubernetes-dashboard edit svc kubernetes-dashboard
+
+Note: Check kubernetes-dashboard node port and enable that Node PORT in security group of worker node
+#To see the details of port no.
+$ kubectl -n kubernetes-dashboard get svc
+#You will see port no. as 443:30077/TCP
+Goto worker node VM and edit the inbound SG rules and add the port 30077 with custom TCP and anywhere IPv4
+Goto worker node VM and edit the inbound SG rules and add the port 443 with HTTPS and anywhere IPv4
+
+# Check in which node kubernete-dashboard POD is running
+$ kubectl get pods -o wide -n kubernetes-dashboard
+
+
+# Access k8s web ui dashboard using below URL
+
+URL : https://node-public-ip:30077/
+#You will see the web dashboard
+
+#'Check' Token. In order to get the token we need to work with RBAC (Roll Based Access). So we need to create RBAC i.e we need to create an user and for that user we need to give access for web dashboard.
+
+#Lets create admin user with below yml
+
+$ vi create-user.yml
+
+#Copy and paste the below yml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard  #We are creating the 'admin-user' under the "kubernetes-dashboard" namespace.
+...
+
+$ kubectl apply -f create-user.yml
+#You can see admin-user created.
+
+Now we need to create the role and bind that role to the admin-user
+
+# create cluster role binding
+$ vi cluster-role-binding.yml
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin  #role name
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+...
+
+$ kubectl apply -f cluster-role-binding.yml
+
+
+# Get the bearer token
+$ kubectl create token admin-user -n kubernetes-dashboard
+
