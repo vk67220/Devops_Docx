@@ -310,3 +310,23 @@ pod restart policies:-
 restartPolicy: always (default)
 restartPolicy: OnFailure
 restartPolicy: Never
+
+
+---------------------
+1. Autoscaling
+---------------------
+It is the process of increasing or decreasing the infrastructure or resources based on demand
+Increasing or decreasing the pods manually is a complex process - Autoscaling
+Types of autoscaling;
+	1. Horizontal Autoscaling - increasing the no of resources - preferred
+	2. Vertical Autoscaling - increasing the capacity of single system
+
+	1. HPA - Horizontal Pod Autoscaling - preferred
+	2. VPA - Vertical Pod Autoscaling
+
+RS & RC depends on CPU/Memory utilization
+HPA will interact with 'metric server' to identify CPU/Memory utilization of POD
+Metric Server is an app that collects metrics from objects such as PODS, Nodes a/c to the state of CPU/Memory
+Metric Server can be installed in the system as an add-on
+
+
