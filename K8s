@@ -346,3 +346,7 @@ This probe checks the /ready
 
 Blue envi   - older version of code
 Green envi  - newer version of code
+ 
+zero downtime.
+Quick rollback if issues arise.
+No impact on live users during deployment.
