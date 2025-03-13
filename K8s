@@ -344,3 +344,5 @@ If it fails, Kubernetes removes the pod from the load balancer (but doesn’t re
 This probe checks the /ready
 
 
+Blue envi   - older version of code
+Green envi  - newer version of code
