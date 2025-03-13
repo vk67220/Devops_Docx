@@ -350,3 +350,7 @@ Green envi  - newer version of code
 zero downtime.
 Quick rollback if issues arise.
 No impact on live users during deployment.
+
+ Canary deployment
+
+ A new app version is given to 10% of users. If it works fine, it’s rolled out to everyone.
