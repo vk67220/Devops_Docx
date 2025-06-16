@@ -585,3 +585,148 @@ spec:
           requests:
             storage: 1Gi
 
+
+
+
+
+
+
+
+============================================================================================================================================================================================
+step-by-step practical guide to dynamically provision a PostgreSQL database with a StatefulSet and show you how to recover using a backup, in case the pod or PVC is deleted.
+============================================================================================================================================================================================
+🧱 STEP 1: Create Namespace
+
+kubectl create namespace devopsexamapp
+📦 STEP 2: Create StorageClass (if not already present)
+Save this as 1-storageclass.yaml:
+
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: postgres-storage-class
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp3
+bash
+Copy
+Edit
+kubectl apply -f 1-storageclass.yaml
+🛠️ STEP 3: Create Headless Service
+Save this as 2-postgres-service.yaml:
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: devopsexamapp
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+kubectl apply -f 2-postgres-service.yaml
+🗄️ STEP 4: Create StatefulSet with PVC
+Save this as 3-postgres-statefulset.yaml:
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: devopsexamapp
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:14
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "devops_exam"
+            - name: POSTGRES_USER
+              value: "admin"
+            - name: POSTGRES_PASSWORD
+              value: "adminpass"
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: postgres-storage-class
+        resources:
+          requests:
+            storage: 1Gi
+
+kubectl apply -f 3-postgres-statefulset.yaml
+🔍 STEP 5: Verify PV/PVC/POD
+
+kubectl get pvc -n devopsexamapp
+kubectl get pv
+kubectl get pods -n devopsexamapp
+You should see:
+
+PVC in Bound state.
+
+PV automatically created.
+
+Pod running.
+
+🧪 STEP 6: Create a Table & Insert Data
+
+kubectl exec -it postgres-0 -n devopsexamapp -- bash
+psql -U admin -d devops_exam
+Inside psql:
+
+sql
+Copy
+Edit
+CREATE TABLE sample(id INT, name TEXT);
+INSERT INTO sample VALUES (1, 'Kiran');
+\q
+💾 STEP 7: Backup the Data
+
+kubectl exec -it postgres-0 -n devopsexamapp -- bash
+pg_dump -U admin -d devops_exam > /tmp/devops_exam.sql
+exit
+kubectl cp devopsexamapp/postgres-0:/tmp/devops_exam.sql ./devops_exam.sql
+
+❌ STEP 8: Simulate Crash
+Delete the namespace or PVC:
+
+
+kubectl delete pvc -n devopsexamapp --all
+kubectl delete pod postgres-0 -n devopsexamapp
+PVC will be recreated automatically with an empty volume.
+
+🔁 STEP 9: Restore Data
+
+kubectl cp ./devops_exam.sql devopsexamapp/postgres-0:/tmp/devops_exam.sql
+kubectl exec -it postgres-0 -n devopsexamapp -- bash
+psql -U admin -d devops_exam -f /tmp/devops_exam.sql
+✅ STEP 10: Verify Data
+
+psql -U admin -d devops_exam
+SELECT * FROM sample;
+You should see your data back.
+
