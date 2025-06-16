@@ -730,3 +730,110 @@ psql -U admin -d devops_exam
 SELECT * FROM sample;
 You should see your data back.
 
+
+=====================================================================================================================================================================
+step-by-step guide to prevent data loss in Kubernetes StatefulSets (like PostgreSQL) using dynamic provisioning with a StorageClass and setting up automatic backups.
+====================================================================================================================================================================
+✅ Step 1: Create a StorageClass with Retain Policy
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-retain
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+Save this as storageclass-retain.yaml and apply:
+
+
+kubectl apply -f storageclass-retain.yaml
+✅ Step 2: Deploy PostgreSQL StatefulSet with the above StorageClass
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: devopsexamapp
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: devops_exam
+            - name: POSTGRES_USER
+              value: admin
+            - name: POSTGRES_PASSWORD
+              value: adminpass
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: gp3-retain
+        resources:
+          requests:
+            storage: 1Gi
+Save as postgres-statefulset.yaml and apply:
+
+
+kubectl apply -f postgres-statefulset.yaml
+✅ Step 3: Backup with pg_dump using CronJob
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: devopsexamapp
+spec:
+  schedule: "0 * * * *"  # hourly
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: pg-dump
+              image: postgres:13
+              env:
+                - name: PGPASSWORD
+                  value: adminpass
+              command: ["sh", "-c"]
+              args:
+                - |
+                  pg_dump -h postgres-0.postgres.devopsexamapp.svc.cluster.local -U admin -d devops_exam > /backup/devops_exam.sql
+              volumeMounts:
+                - name: backup-volume
+                  mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-volume
+              persistentVolumeClaim:
+                claimName: postgres-backup-pvc
+You need a separate PVC for /backup. Create it as needed.
+
+✅ Step 4: Test Pod Deletion with Volume Retention
+
+kubectl delete pod postgres-0 -n devopsexamapp
+Then confirm:
+
+
+kubectl get pv
+It should still show Bound and not deleted.
+
