@@ -978,6 +978,25 @@ kubectl patch pvc "$pvc" -n devopsexamapp -p '{"metadata":{"finalizers":null}}' 
 done
 
 
+corresponding PV is still stuck in Terminating state. This sometimes happens when the volume has a finalizer attached as well.
+
+Here’s how to remove the finalizer from the PersistentVolume (PV) manually:
+
+🧹 Remove Finalizer from Stuck PV
+1. Edit the stuck PV manually
+
+kubectl edit pv pvc-ae04f9bf-2af1-4e92-b55e-b91273f7d221
+2. In the editor that opens, scroll to this section:
+
+finalizers:
+  - kubernetes.io/pv-protection
+3. Delete the finalizers section, then save and exit the editor.
+✅ Now Verify:
+
+kubectl get pv
+The stuck PV should now be deleted automatically.
+
+
 CSI drivers are running
 
 kubectl get pods -n kube-system | grep ebs
