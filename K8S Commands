@@ -45,3 +45,6 @@ kubectl taint node workernode-ip type=web:prefernoschedule
 kubectl taint node workernode-ip type=web:noexecute
 
 
+kubectl edit pv pvc-ae04f9bf-2af1-4e92-b55e-b91273f7d221
+
+
