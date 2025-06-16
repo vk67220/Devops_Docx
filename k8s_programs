@@ -1011,5 +1011,147 @@ Then, recreate from step 1 again.
 
 
 
+=====================================================================================
+Scenario: PostgreSQL with Persistent Data on EBS (gp3)
+=====================================================================================
+✅ Objective:
+Create a StorageClass with Retain.
+
+Deploy PostgreSQL StatefulSet.
+
+Verify data is retained after StatefulSet deletion.
+
+Restore data by re-attaching the PV to a new PVC.
+
+🔧 Step-by-Step Guide
+Step 1: Create a StorageClass with Retain
+storageclass-retain.yaml
+
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-retain
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+
+kubectl apply -f storageclass-retain.yaml
+Step 2: Deploy PostgreSQL StatefulSet
+postgres-statefulset.yaml
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: devopsexamapp
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: devops_exam
+            - name: POSTGRES_USER
+              value: admin
+            - name: POSTGRES_PASSWORD
+              value: adminpass
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: gp3-retain
+        resources:
+          requests:
+            storage: 2Gi
+
+kubectl apply -f postgres-statefulset.yaml
+Step 3: Insert Some Data into PostgreSQL
+Log into the pod:
+
+
+kubectl exec -it postgres-0 -n devopsexamapp -- bash
+psql -U admin -d devops_exam
+Insert test data:
+
+
+CREATE TABLE students (id SERIAL PRIMARY KEY, name TEXT);
+INSERT INTO students (name) VALUES ('Alice'), ('Bob');
+\q
+exit
+Step 4: Delete the StatefulSet Only
+
+kubectl delete statefulset postgres -n devopsexamapp
+Check PVC still exists:
+
+
+kubectl get pvc -n devopsexamapp
+Step 5: Delete the PVC (Simulate accident)
+
+kubectl delete pvc postgres-storage-postgres-0 -n devopsexamapp
+Now check PV status:
+
+
+kubectl get pv
+It should show Released.
+
+Step 6: Patch PV to Remove ClaimRef
+
+kubectl patch pv <pv-name> -p '{"spec":{"claimRef": null}}'
+Replace <pv-name> with the actual PV name, like pvc-xxxxx.
+
+Step 7: Recreate PVC Manually and Rebind to Existing PV
+postgres-pvc-reuse.yaml
+
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-storage
+  namespace: devopsexamapp
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  volumeName: <pv-name>      # Same as the PV name
+  storageClassName: ""       # Empty to match the retained PV
+
+kubectl apply -f postgres-pvc-reuse.yaml
+Step 8: Recreate the StatefulSet
+Reapply the StatefulSet YAML (same as step 2).
+
+
+kubectl apply -f postgres-statefulset.yaml
+Step 9: Verify Data
+Log in again:
+
+
+kubectl exec -it postgres-0 -n devopsexamapp -- psql -U admin -d devops_exam
+Check the data:
+
+
+SELECT * FROM students;
+
 
 
