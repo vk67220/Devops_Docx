@@ -846,9 +846,7 @@ how to correctly handle PostgreSQL StatefulSet with dynamic provisioning, especi
 🧱 1. Create the StorageClass
 Here’s a recommended StorageClass for AWS EBS CSI:
 
-yaml
-Copy
-Edit
+
 # storageclass.yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -861,16 +859,12 @@ parameters:
   type: gp3
 Apply it:
 
-bash
-Copy
-Edit
+
 kubectl apply -f storageclass.yaml
 📦 2. Create a Headless Service for PostgreSQL
 This is required for StatefulSet DNS:
 
-yaml
-Copy
-Edit
+
 # postgres-headless-svc.yaml
 apiVersion: v1
 kind: Service
@@ -886,9 +880,7 @@ spec:
 🏗️ 3. Create the PostgreSQL StatefulSet
 This is the core StatefulSet with volume claim referencing the StorageClass:
 
-yaml
-Copy
-Edit
+
 # postgres-statefulset.yaml
 apiVersion: apps/v1
 kind: StatefulSet
@@ -933,17 +925,13 @@ spec:
 🔍 Key part: storageClassName: postgres-gp3
 
 🛠️ 4. Apply in Correct Order
-bash
-Copy
-Edit
+
 kubectl create namespace devopsexamapp
 kubectl apply -f storageclass.yaml
 kubectl apply -f postgres-headless-svc.yaml
 kubectl apply -f postgres-statefulset.yaml
 🔍 5. Verify PVC and Pod Status
-bash
-Copy
-Edit
+
 kubectl get pvc -n devopsexamapp
 kubectl get pv
 kubectl get pods -n devopsexamapp
@@ -959,20 +947,50 @@ Pod → Running
 If you delete everything, including PVs and PVCs, and StorageClass remains, do this:
 
 🔁 Cleanup Procedure
-bash
-Copy
-Edit
+
 kubectl delete statefulset postgres -n devopsexamapp
 kubectl delete pvc -l app=postgres -n devopsexamapp
 kubectl delete pv --all  # Optional if manually created
 kubectl delete svc postgres -n devopsexamapp
 kubectl delete namespace devopsexamapp
 
+
+
 Ensure:
 
-No finalizers stuck on PVCs (kubectl patch if needed)
+1)No finalizers stuck on PVCs (kubectl patch if needed)
+
+Check finalizers:
+kubectl get pvc -n devopsexamapp -o yaml
+
+If you see this under metadata:
+
+finalizers:
+  - kubernetes.io/pvc-protection
+
+Remove stuck finalizer (force delete PVC):
+kubectl patch pvc <pvc-name> -n devopsexamapp -p '{"metadata":{"finalizers":null}}' --type=merge
+
+Or forcibly remove all:
+
+kubectl get pvc -n devopsexamapp | awk 'NR>1 {print $1}' | while read pvc; do
+kubectl patch pvc "$pvc" -n devopsexamapp -p '{"metadata":{"finalizers":null}}' --type=merge
+done
+
 
 CSI drivers are running
 
+kubectl get pods -n kube-system | grep ebs
+
+If they’re not running, you need to install the AWS EBS CSI driver:
+kubectl apply -k "github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/ecr/?ref=release-1.28"
+
+
+
 Then, recreate from step 1 again.
+
+
+
+
+
 
