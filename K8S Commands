@@ -47,4 +47,12 @@ kubectl taint node workernode-ip type=web:noexecute
 
 kubectl edit pv pvc-ae04f9bf-2af1-4e92-b55e-b91273f7d221
 
+kubectl scale deployment,statefulset --all --replicas=0 -n devopsexamapp
+kubectl delete pods --all -n devopsexamapp
+kubectl get all -n kube-system
+kubectl get deploy,sts,ds -n kube-system
+kubectl scale deployment coredns --replicas=0 -n kube-system
+kubectl delete pods --all -n kube-system
+
+
 
