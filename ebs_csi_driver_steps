@@ -114,3 +114,37 @@ aws ec2 describe-volumes \
 Step 6.2 Delete volume
 
 aws ec2 delete-volume --volume-id vol-xxxxxxxx
+
+===============================================================================================================================================================
+present policy deletion or detach from roles 
+===============================================================================================================================================================
+
+✅ Step 1: List attached policies
+aws iam list-attached-role-policies \
+  --role-name AmazonEKS_EBS_CSI_DriverRole
+
+✅ Step 2: Detach the EBS policy (if attached)
+aws iam detach-role-policy \
+  --role-name AmazonEKS_EBS_CSI_DriverRole \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+
+
+If multiple policies are listed, detach all of them.
+
+✅ Step 3: Delete inline policies (if any)
+
+List inline policies:
+
+aws iam list-role-policies \
+  --role-name AmazonEKS_EBS_CSI_DriverRole
+
+
+Delete each one:
+
+aws iam delete-role-policy \
+  --role-name AmazonEKS_EBS_CSI_DriverRole \
+  --policy-name <INLINE_POLICY_NAME>
+
+✅ Step 4: Delete the role
+aws iam delete-role \
+  --role-name AmazonEKS_EBS_CSI_DriverRole
